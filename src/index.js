@@ -3,6 +3,7 @@ let addToy = false;
 // Elements of interest
 const toyCollectionEl = document.querySelector("div#toy-collection");
 const toyCollectionFragment = document.createDocumentFragment();
+const form = document.querySelector("form.add-toy-form");
 
 document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.querySelector("#new-toy-btn");
@@ -25,8 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(() => toyCollectionEl.appendChild(toyCollectionFragment));
 
   // Functionality to add a new toy
-  const form = document.querySelector("form.add-toy-form");
-
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -53,6 +52,32 @@ document.addEventListener("DOMContentLoaded", () => {
         toyImg.value = "";
       });
   });
+
+  // Functionality to increase a toy's like
+  toyCollectionEl.addEventListener("click", (event) => {
+    if (event.target.matches("button.like-btn")) {
+      const toyEl = event.target.parentElement;
+      const toyElId = toyEl.dataset.id;
+      const toyLikesEl = toyEl.querySelector("p");
+      const currentLikes = toyLikesEl.textContent.trim();
+
+      fetch(`http://localhost:3000/toys/${toyElId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accpet: "application/json",
+        },
+        body: JSON.stringify({
+          likes: Number.parseInt(currentLikes) + 1,
+        }),
+      })
+        .then((response) => response.json())
+        .then((updatedToy) => {
+          toyLikesEl.textContent = updatedToy.likes;
+        })
+        .catch((error) => console.error(error.message));
+    }
+  });
 });
 
 // Utility functions
@@ -65,6 +90,7 @@ function createToyElements(toys) {
 function createToyElement(toy) {
   const cardEl = document.createElement("div");
   cardEl.classList.add("card");
+  cardEl.dataset.id = toy.id;
 
   const h2 = document.createElement("h2");
   h2.textContent = toy.name;
